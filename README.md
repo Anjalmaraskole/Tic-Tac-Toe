@@ -29,11 +29,9 @@ A comprehensive Python application for playing Tic Tac Toe in real-time. This sy
 
 ## 🗂️ **Project Structure**
 
-tic-tac-toe/
-├── app.py # Flask application handling backend logic
-├── templates/
-│ └── index.html # Frontend UI with embedded CSS and JavaScript
-└── README.md # Project documentation
+tic-tac-toe/app.py 
+templates/
+index.html 
 
 
 ### **File Descriptions**
@@ -54,15 +52,20 @@ To run this project, you’ll need:
 ## 📦 **Installation**
 
 ### 1. Clone this Repository
+
 git clone https://github.com/yourusername/tic-tac-toe.git
+
 cd tic-tac-toe
 
 
 ### 2. Create a Virtual Environment (Optional but Recommended)
+
 python -m venv venv
+
 source venv/bin/activate # On Windows: venv\Scripts\activate
 
 ### 3. Install Dependencies
+
 pip install flask
 
 ---
@@ -138,7 +141,6 @@ If you have any questions or suggestions, feel free to contact me at akulaanshul
 
 ---
 
-You can copy this directly into your `README.md` file in your GitHub repository! Let me know if you need further assistance! 😊
 
 
 
