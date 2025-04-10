@@ -53,7 +53,7 @@ To run this project, you’ll need:
 
 ### 1. Clone this Repository
 
-git clone https://github.com/yourusername/tic-tac-toe.git
+git clone https://github.com/AkulaAnshul/tic-tac-toe.git
 
 cd tic-tac-toe
 
@@ -62,7 +62,8 @@ cd tic-tac-toe
 
 python -m venv venv
 
-source venv/bin/activate # On Windows: venv\Scripts\activate
+source venv/bin/activate 
+# On Windows: venv\Scripts\activate
 
 ### 3. Install Dependencies
 
@@ -115,7 +116,6 @@ The frontend is built using HTML, CSS, and JavaScript:
 
 ## 🔧 **Future Enhancements**
 
-If further development is planned, consider adding:
 1. Multiplayer functionality across devices.
 2. AI opponent with adjustable difficulty levels.
 3. Sound effects for moves and wins.
