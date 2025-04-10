@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --win-color: #2ecc71;
+            --x-color: #e74c3c;
+            --o-color: #2ecc71;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 10px;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            border: 3px solid var(--primary-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .cell[data-player="X"] {
+            color: var(--x-color);
+        }
+
+        .cell[data-player="O"] {
+            color: var(--o-color);
+        }
+
+        #status {
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        #reset-btn {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        #reset-btn:hover {
+            transform: translateY(-2px);
+            background: #2980b9;
+        }
+
+        .win-line {
+            position: fixed;
+            background-color: var(--win-color);
+            height: 8px;
+            border-radius: 4px;
+            z-index: 100;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.8);
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .popup h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .popup button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .popup button:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tic Tac Toe</h1>
+    <div class="board" id="board"></div>
+    <div id="status">Current Player: X</div>
+    <button id="reset-btn">New Game</button>
+
+    <div class="popup" id="result-popup">
+        <h2 id="result-message"></h2>
+        <button onclick="closePopup()">Close</button>
+    </div>
+
+    <script>
+        const gameId = "{{ game_id }}";
+        const board = document.getElementById('board');
+        const status = document.getElementById('status');
+        const resetBtn = document.getElementById('reset-btn');
+        const resultPopup = document.getElementById('result-popup');
+        const resultMessage = document.getElementById('result-message');
+        let winLine = null;
+
+        for(let i=0; i<9; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.position = i;
+            cell.addEventListener('click', handleMove);
+            board.appendChild(cell);
+        }
+
+        async function handleMove(e) {
+            const position = parseInt(e.target.dataset.position);
+            
+            const response = await fetch(`/move/${gameId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ position })
+            });
+            
+            if(response.ok) {
+                const gameState = await response.json();
+                updateBoard(gameState);
+                
+                if(gameState.winner) {
+                    drawWinLine(gameState.winner);
+                    showResult(`Winner: ${gameState.winner}`);
+                    createConfetti(gameState.winner);
+                } else if(gameState.board.indexOf("") === -1) {
+                    showResult("It's a tie!");
+                }
+            }
+        }
+
+        function updateBoard(state) {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, i) => {
+                cell.textContent = state.board[i];
+                cell.dataset.player = state.board[i];
+            });
+            
+            status.textContent = state.winner ? 
+                `Winner: ${state.winner}` : 
+                `Current Player: ${state.current_player}`;
+        }
+
+        function drawWinLine(winner) {
+            if(winLine) winLine.remove();
+
+            const cells = document.querySelectorAll('.cell');
+            const winningCombinations = [[0,1,2], [3,4,5],[6,7,8],[0,3,6], [1,4,7], [2,5,8],[0,4,8], [2,4,6] ];
+        
+            let winCombo = null;
+            for (const combo of winningCombinations) {
+                if (cells[combo[0]].textContent === winner && 
+                    cells[combo[1]].textContent === winner && 
+                    cells[combo[2]].textContent === winner) {
+                    winCombo = combo;
+                    break;
+                }
+            }
+            
+            if (winCombo) {
+
+                const firstCell = cells[winCombo[0]].getBoundingClientRect();
+                const lastCell = cells[winCombo[2]].getBoundingClientRect();
+
+                const startX = firstCell.left + firstCell.width / 2;
+                const startY = firstCell.top + firstCell.height / 2;
+                const endX = lastCell.left + lastCell.width / 2;
+                const endY = lastCell.top + lastCell.height / 2;
+                
+                const length = Math.sqrt(
+                    Math.pow(endX - startX, 2) + 
+                    Math.pow(endY - startY, 2)
+                );
+                const angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
+                
+                winLine = document.createElement('div');
+                winLine.className = 'win-line';
+                winLine.style.width = `${length}px`;
+                
+                winLine.style.left = `${startX}px`;
+                winLine.style.top = `${startY}px`;
+                winLine.style.transformOrigin = '0 50%';
+                
+                winLine.style.transform = `translateY(-4px) rotate(${angle}deg)`;
+                
+                document.body.appendChild(winLine);
+            }
+        }
+
+        function createConfetti(winner) {
+            const colors = winner === 'X' ? ['#e74c3c', '#c0392b'] : ['#2ecc71', '#27ae60'];
+            
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.9 },
+                colors: colors,
+            });
+
+            setTimeout(() => {
+                confetti({
+                    particleCount: 50,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0, y: 0.8 },
+                    colors: colors,
+                });
+
+                confetti({
+                    particleCount: 50,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1, y: 0.8 },
+                    colors: colors,
+                });
+            }, 250);
+        }
+
+        function showResult(message) {
+            resultMessage.textContent = message;
+            resultPopup.style.display = 'block';
+        }
+
+        function closePopup() {
+            resultPopup.style.display = 'none';
+        }
+
+        async function resetGame() {
+            if(winLine) {
+                winLine.remove();
+                winLine = null;
+            }
+            
+            const response = await fetch(`/reset/${gameId}`, {
+                method: 'POST'
+            });
+            
+            if(response.ok) {
+                const gameState = await response.json();
+                updateBoard(gameState);
+                closePopup();
+            }
+        }
+
+        resetBtn.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
