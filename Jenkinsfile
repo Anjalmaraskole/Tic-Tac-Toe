@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Clone Repo') {
             steps {
-                git 'https://github.com/Anjalmaraskole/Tic-Tac-Toe.git'  
+                git branch: 'main', url: 'https://github.com/Anjalmaraskole/Tic-Tac-Toe.git'
             }
         }
 
