@@ -1,6 +1,13 @@
 pipeline {
     agent any
 
+stage('Clean Workspace') {
+    steps {
+        deleteDir()
+    }
+}
+
+    
     stages {
         stage('Clone Repo') {
             steps {
