@@ -1,4 +1,3 @@
-
 from flask import Flask, jsonify, request, render_template
 import random
 
@@ -21,7 +20,11 @@ class TicTacToe:
         return False
 
     def check_win(self):
-        win_combinations = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8],  [0,4,8], [2,4,6]]
+        win_combinations = [
+            [0,1,2], [3,4,5], [6,7,8], 
+            [0,3,6], [1,4,7], [2,5,8],  
+            [0,4,8], [2,4,6]
+        ]
         for combo in win_combinations:
             if self.board[combo[0]] == self.board[combo[1]] == self.board[combo[2]] != "":
                 return True
@@ -51,7 +54,7 @@ def make_move(game_id):
 @app.route('/reset/<game_id>', methods=['POST'])
 def reset_game(game_id):
     if game_id in games:
-        games[game_id] = TicTacToe()  
+        games[game_id] = TicTacToe()
         return jsonify({
             "board": games[game_id].board,
             "current_player": games[game_id].current_player,
@@ -60,4 +63,5 @@ def reset_game(game_id):
     return jsonify({"error": "Game not found"}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # ✅ Important: host="0.0.0.0" so it works in Kubernetes/Minikube
+    app.run(host="0.0.0.0", port=5000, debug=True)
